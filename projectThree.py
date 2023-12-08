@@ -2,11 +2,11 @@ import random
 import numpy as np
 
 # create the diagrams, which are 20x20 pixel images
-def createDiagram ():
+def createDiagram():
     diagram = [[0 for _ in range(20)] for _ in range(20)]
     colors = [1, 2, 3, 4] # 1 = Red | 2 = Blue | 3 = Yellow | 4 = Green
-    isDangerous
-    wire_to_cut
+    isDangerous = False
+    wire_to_cut = 0
 
     row_first = random.random() < 0.5 # decides whether row or column is chosen first (50% chance)
     rowSelected = []
@@ -114,4 +114,7 @@ def createDiagram ():
         return diagram, isDangerous, 0
     
 
-def firstTask():
+def test():
+    createDiagram()
+
+test()
