@@ -13,6 +13,7 @@ def createDiagram ():
     columnSelected = []
 
     if row_first:
+        # row
         randColor = random.choice(colors)
         colors.remove(randColor)
         randRow = random.randrange(1,21)
@@ -20,10 +21,10 @@ def createDiagram ():
         for i in range(20):
             diagram[randRow][i] = randColor
 
-        if 3 in colors and 1 not in colors:
+        if 3 in colors and 1 not in colors: # checks if Red wire is laid before Yellow wire to determine that image is Dangerous
             isDangerous = True
 
-        
+        # column
         randColor = random.choice(colors)
         colors.remove(randColor)
         randColumn = random.randrange(1,21)
@@ -35,9 +36,10 @@ def createDiagram ():
             isDangerous = True
         
 
+        # row
         randColor = random.choice(colors)
         colors.remove(randColor)
-        wire_to_cut = randColor
+        wire_to_cut = randColor # signifies which wire to cut (3rd one laid down) if it is dangerous
         while True:
             randRow = random.randrange(1,21)
             if randRow not in rowSelected:
@@ -49,6 +51,7 @@ def createDiagram ():
             isDangerous = True
 
 
+        # column
         randColor = random.choice(colors)
         colors.remove(randColor)
         while True:
@@ -58,6 +61,7 @@ def createDiagram ():
         for i in range(20):
             diagram[i][randColumn] = randColor
     else:
+        # column
         randColor = random.choice(colors)
         colors.remove(randColor)
         randColumn = random.randrange(1,21)
@@ -68,7 +72,7 @@ def createDiagram ():
         if 3 in colors and 1 not in colors:
             isDangerous = True
 
-        
+        # row
         randColor = random.choice(colors)
         colors.remove(randColor)
         randRow = random.randrange(1,21)
@@ -79,10 +83,10 @@ def createDiagram ():
         if 3 in colors and 1 not in colors:
             isDangerous = True
 
-        
+        # column
         randColor = random.choice(colors)
         colors.remove(randColor)
-        wire_to_cut = randColor
+        wire_to_cut = randColor # signifies which wire to cut (3rd one laid down) if it is dangerous
         while True:
             randColumn = random.randrange(1,21)
             if randColumn not in columnSelected:
@@ -94,6 +98,7 @@ def createDiagram ():
             isDangerous = True
 
 
+        # row
         randColor = random.choice(colors)
         colors.remove(randColor)
         while True:
@@ -104,6 +109,6 @@ def createDiagram ():
             diagram[randRow][i] = randColor
     
     if isDangerous:
-        return diagram, isDangerous, wire_to_cut
+        return diagram, isDangerous, wire_to_cut 
     else: 
         return diagram, isDangerous, 0
