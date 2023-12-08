@@ -112,3 +112,6 @@ def createDiagram ():
         return diagram, isDangerous, wire_to_cut 
     else: 
         return diagram, isDangerous, 0
+    
+
+def firstTask():
