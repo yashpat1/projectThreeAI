@@ -19,7 +19,7 @@ def createDiagram():
         randRow = random.randrange(1,21)
         rowSelected.append(randRow)
         for i in range(20):
-            diagram[randRow][i] = randColor
+            diagram[randRow - 1][i] = randColor
 
         if 3 in colors and 1 not in colors: # checks if Red wire is laid before Yellow wire to determine that image is Dangerous
             isDangerous = True
@@ -30,7 +30,7 @@ def createDiagram():
         randColumn = random.randrange(1,21)
         columnSelected.append(randColumn)
         for i in range(20):
-            diagram[i][randColumn] = randColor
+            diagram[i][randColumn - 1] = randColor
 
         if 3 in colors and 1 not in colors:
             isDangerous = True
@@ -45,7 +45,7 @@ def createDiagram():
             if randRow not in rowSelected:
                 break
         for i in range(20):
-            diagram[randRow][i] = randColor
+            diagram[randRow - 1][i] = randColor
         
         if 3 in colors and 1 not in colors:
             isDangerous = True
@@ -59,7 +59,7 @@ def createDiagram():
             if randColumn not in columnSelected:
                 break
         for i in range(20):
-            diagram[i][randColumn] = randColor
+            diagram[i][randColumn - 1] = randColor
     else:
         # column
         randColor = random.choice(colors)
@@ -67,7 +67,7 @@ def createDiagram():
         randColumn = random.randrange(1,21)
         columnSelected.append(randColumn)
         for i in range(20):
-            diagram[i][randColumn] = randColor
+            diagram[i][randColumn - 1] = randColor
 
         if 3 in colors and 1 not in colors:
             isDangerous = True
@@ -78,7 +78,7 @@ def createDiagram():
         randRow = random.randrange(1,21)
         rowSelected.append(randRow)
         for i in range(20):
-            diagram[randRow][i] = randColor
+            diagram[randRow - 1][i] = randColor
         
         if 3 in colors and 1 not in colors:
             isDangerous = True
@@ -92,7 +92,7 @@ def createDiagram():
             if randColumn not in columnSelected:
                 break
         for i in range(20):
-            diagram[i][randColumn] = randColor
+            diagram[i][randColumn - 1] = randColor
         
         if 3 in colors and 1 not in colors:
             isDangerous = True
@@ -106,13 +106,20 @@ def createDiagram():
             if randRow not in rowSelected:
                 break
         for i in range(20):
-            diagram[randRow][i] = randColor
+            diagram[randRow - 1][i] = randColor
     
     if isDangerous:
         return diagram, isDangerous, wire_to_cut 
     else: 
         return diagram, isDangerous, 0
     
+#coverts a diagram to an example 
+def covertDiagramToExample(diagram, isDangerous):
+    exampleX = []
+    exampleY = 1 if isDangerous == 0 else 1
+    for r in range(20):
+        for c in range(20):
+            if diagram[r][c] == 0:
 
 def test():
     createDiagram()
