@@ -114,12 +114,36 @@ def createDiagram():
         return diagram, isDangerous, 0
     
 #coverts a diagram to an example 
-def covertDiagramToExample(diagram, isDangerous):
+def convertDiagramToExample(diagram, isDangerous):
     exampleX = []
     exampleY = 1 if isDangerous == 0 else 1
     for r in range(20):
         for c in range(20):
             if diagram[r][c] == 0:
+                exampleX.extend([0,0,0,0,1])
+            elif diagram[r][c] == 1:
+                exampleX.extend([1,0,0,0,0])
+            elif diagram[r][c] == 2:
+                exampleX.extend([0,1,0,0,0])
+            elif diagram[r][c] == 3:
+                exampleX.extend([0,0,1,0,0])
+            elif diagram[r][c] == 4:
+                exampleX.extend([0,0,0,1,0])
+    
+    return exampleX, exampleY
+
+def createDataSet(numExamples):
+    X = [1]
+    Y = []
+    for i in range(numExamples):
+        diagram, isDangerous, wire_to_cut = createDiagram()
+        exampleX, exampleY = convertDiagramToExample(diagram, isDangerous)
+        X.append(exampleX)
+        Y.append(exampleY)
+
+        
+
+            
 
 def test():
     createDiagram()
