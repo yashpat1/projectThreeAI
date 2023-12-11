@@ -138,10 +138,16 @@ def createDataSet(numExamples):
     Y = []
     for i in range(numExamples):
         diagram, isDangerous, wire_to_cut = createDiagram()
-        exampleX, exampleY = convertDiagramToExample(diagram, isDangerous)
-        X.append(np.array(exampleX))
-        Y.append(exampleY)
-    
+        rotatedDiagram = diagram
+        for i in range(4):
+            exampleX, exampleY = convertDiagramToExample(rotatedDiagram, isDangerous)
+            X.append(np.array(exampleX))
+            Y.append(exampleY)
+            rotatedDiagram = np.rot90(rotatedDiagram)
+        #exampleX, exampleY = convertDiagramToExample(diagram, isDangerous)
+        #X.append(np.array(exampleX))
+        #Y.append(exampleY)
+    print("Percent of dangerous diagrams " + str(Y.count(1)/len(Y)))
     return np.array(X), np.array(Y)
 
 def sigmoid(z):
@@ -159,7 +165,8 @@ def accuracy(y_train, preds_train):
     preds = (preds_train >= 0.5).astype(int)
     return np.mean(preds == y_train) * 100 
 
-def logisticRegression(X, Y, learning_rate=0.001, lambda_val=0.00001, epochs=2000):
+
+def logisticRegression(X, Y, learning_rate=0.01, lambda_val=0.00001, epochs=100):  #lr = 0.01, w = 0.000002
     weights = np.full(X.shape[1] + 1, -0.000002) # initializes initial weights to -0.02
     loss = []
     X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
@@ -171,14 +178,14 @@ def logisticRegression(X, Y, learning_rate=0.001, lambda_val=0.00001, epochs=200
         epoch_loss = 0
         
         for i in rand_ind:
-            l1_reg = lambda_val * np.sum(np.abs(weights))
+            #l1_reg = lambda_val * np.sum(np.abs(weights))
             x_val = X_bias[i] 
             y_val = Y[i]
 
             preds = sigmoid(np.dot(weights, x_val))
             preds = np.clip(preds, epsilon, 1-epsilon)
             error = preds - y_val # error is prediction - actual value
-            weights -= learning_rate * (x_val * error + l1_reg)
+            weights -= learning_rate * (x_val * error)
 
             ind_loss = -y_val * np.log(preds) - (1 - y_val) * np.log(1 - preds)
             epoch_loss += ind_loss
@@ -189,7 +196,7 @@ def logisticRegression(X, Y, learning_rate=0.001, lambda_val=0.00001, epochs=200
     return weights, loss
 
 # training loss and accuracy
-x_train, y_train = createDataSet(500)
+x_train, y_train = createDataSet(5000)
 trained, loss = logisticRegression(x_train, y_train)
 
 X_train_bias = np.concatenate((np.ones((x_train.shape[0], 1)), x_train), axis=1)
