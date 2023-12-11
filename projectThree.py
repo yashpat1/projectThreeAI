@@ -114,23 +114,23 @@ def createDiagram():
         return diagram, isDangerous, 0
     
 #coverts a diagram to an example 
-def convertDiagramToExample(diagram, isDangerous):
-    exampleX = []
-    exampleY = 1 if isDangerous else 0
-    for r in range(20):
-        for c in range(20):
-            if diagram[r][c] == 0:
-                exampleX.extend([0,0,0,0,1])
-            elif diagram[r][c] == 1:
-                exampleX.extend([1,0,0,0,0])
-            elif diagram[r][c] == 2:
-                exampleX.extend([0,1,0,0,0])
-            elif diagram[r][c] == 3:
-                exampleX.extend([0,0,1,0,0])
-            elif diagram[r][c] == 4:
-                exampleX.extend([0,0,0,1,0])
+# def convertDiagramToExample(diagram, isDangerous):
+#     exampleX = []
+#     exampleY = 1 if isDangerous else 0
+#     for r in range(20):
+#         for c in range(20):
+#             if diagram[r][c] == 1:
+#                 exampleX.extend([1,0,0,0])
+#             elif diagram[r][c] == 2:
+#                 exampleX.extend([0,1,0,0])
+#             elif diagram[r][c] == 3:
+#                 exampleX.extend([0,0,1,0])
+#             elif diagram[r][c] == 4:
+#                 exampleX.extend([0,0,0,1])
+#             else:
+#                 continue
     
-    return exampleX, exampleY
+#     return exampleX, exampleY
 
 def createDataSet(numExamples):
     X = []
@@ -146,7 +146,7 @@ def createDataSet(numExamples):
 def sigmoid(z):
     return 1/(1 + np.exp(-z)) # z is the dot product between weights and x
 
-def logisticRegression(X, Y, learning_rate=0.1, epochs=1000):
+def logisticRegression(X, Y, learning_rate=0.1, lambda_val=0.0001, epochs=1000):
     weights = np.random.randn(np.shape(X)[1] + 1) # initializes initial weights to random numbers 
     X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
 
@@ -154,39 +154,37 @@ def logisticRegression(X, Y, learning_rate=0.1, epochs=1000):
         rand_ind = np.random.permutation(len(Y)) # randomly choose data (prevent bias)
         
         for i in rand_ind:
+            l2_reg = 0.5 * lambda_val * np.sum(weights ** 2)
             x_val = X_bias[i] 
             y_val = Y[i]
 
             preds = sigmoid(np.dot(weights, x_val))
             error = preds - y_val # error is prediction - actual value
 
-            weights -= learning_rate * error * x_val
+            weights -= learning_rate * (error * x_val + l2_reg)
 
     return weights
 
-# def predict(X, weights):
-#     z = np.dot(X,weights)
-#     predictions = []
-    
-#     for i in sigmoid(z):
-#         if i > 0.5:
-#             predictions.append(1)
-#         else:
-#             predictions.append(0)
-    
-#     return predictions
+def training_loss(y_train, preds_train):
+    for i in range(len(preds_train)):
+        if preds_train[i] == 1:
+            preds_train[i] = 1 - 1e-8
+        elif preds_train[i] == 0:
+            preds_train[i] = 1e-8
+    return -np.mean(y_train * np.log(preds_train) + (1 - y_train) * np.log(1 - preds_train))
 
+def predictions(y_train, preds_train):
+    preds = (preds_train >= 0.5).astype(int)
+    return np.mean(preds == y_train) * 100 
+
+
+# training loss and accuracy
 x_train, y_train = createDataSet(500)
 trained = logisticRegression(x_train, y_train)
 print("Trained Weights:", trained)
 
 X_train_bias = np.concatenate((np.ones((x_train.shape[0], 1)), x_train), axis=1)
 preds_train = sigmoid(np.dot(X_train_bias, trained))
-print("y_train: ", y_train)
-print("preds_train: ", preds_train)
-training_loss = -np.mean(y_train * np.log(preds_train) + (1 - y_train) * np.log(1 - preds_train))
-print("Training Loss: ", training_loss)
 
-predictions = (preds_train >= 0.5).astype(int)
-accuracy = np.mean(predictions == y_train) * 100
-print("Training Accuracy: ", accuracy, "%")
+print("Training Loss: ", training_loss(y_train, preds_train))    
+print("Training Accuracy: ", predictions(y_train, preds_train), "%")
