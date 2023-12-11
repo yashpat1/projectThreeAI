@@ -146,8 +146,8 @@ def createDataSet(numExamples):
 def sigmoid(z):
     return 1/(1 + np.exp(-z)) # z is the dot product between weights and x
 
-def logisticRegression(X, Y, learning_rate=0.1, lambda_val=0.0001, epochs=1000):
-    weights = np.random.randn(np.shape(X)[1] + 1) # initializes initial weights to random numbers 
+def logisticRegression(X, Y, learning_rate=0.001, lambda_val=0.0001, epochs=1000):
+    weights = np.full(np.shape(X)[1] + 1, -0.02) # initializes initial weights to -0.02
     X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
 
     for epoch in range(epochs):
@@ -179,7 +179,7 @@ def predictions(y_train, preds_train):
 
 
 # training loss and accuracy
-x_train, y_train = createDataSet(500)
+x_train, y_train = createDataSet(5000)
 trained = logisticRegression(x_train, y_train)
 print("Trained Weights:", trained)
 
