@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 
 # create the diagrams, which are 20x20 pixel images
 def createDiagram():
@@ -146,45 +147,60 @@ def createDataSet(numExamples):
 def sigmoid(z):
     return 1/(1 + np.exp(-z)) # z is the dot product between weights and x
 
-def logisticRegression(X, Y, learning_rate=0.001, lambda_val=0.0001, epochs=1000):
-    weights = np.full(np.shape(X)[1] + 1, -0.02) # initializes initial weights to -0.02
-    X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
-
-    for epoch in range(epochs):
-        rand_ind = np.random.permutation(len(Y)) # randomly choose data (prevent bias)
-        
-        for i in rand_ind:
-            l2_reg = 0.5 * lambda_val * np.sum(weights ** 2)
-            x_val = X_bias[i] 
-            y_val = Y[i]
-
-            preds = sigmoid(np.dot(weights, x_val))
-            error = preds - y_val # error is prediction - actual value
-
-            weights -= learning_rate * (error * x_val + l2_reg)
-
-    return weights
-
 def training_loss(y_train, preds_train):
     for i in range(len(preds_train)):
         if preds_train[i] == 1:
             preds_train[i] = 1 - 1e-8
         elif preds_train[i] == 0:
             preds_train[i] = 1e-8
-    return -np.mean(y_train * np.log(preds_train) + (1 - y_train) * np.log(1 - preds_train))
+    return np.mean(-y_train * np.log(preds_train) + (1 - y_train) * np.log(1 - preds_train))
 
 def predictions(y_train, preds_train):
     preds = (preds_train >= 0.5).astype(int)
     return np.mean(preds == y_train) * 100 
 
+def logisticRegression(X, Y, learning_rate=0.001, lambda_val=0.0001, epochs=2000):
+    weights = np.full(np.shape(X)[1] + 1, -0.02) # initializes initial weights to -0.02
+    loss = []
+    X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
+
+    for epoch in range(epochs):
+        rand_ind = np.random.permutation(len(Y)) # randomly choose data (prevent bias)
+        epoch_loss = 0
+        
+        for i in rand_ind:
+            l2_reg = 0.5 * lambda_val * np.sum(weights ** 2)
+            x_val = X_bias[i] 
+            y_val = Y[i]
+
+            preds = sigmoid(np.dot(x_val, weights))
+            error = preds - y_val # error is prediction - actual value
+            weights -= learning_rate * (error * x_val + l2_reg)
+
+            ind_loss = -y_val * np.log(preds) + (1 - y_val) * np.log(1 - preds)
+            epoch_loss += ind_loss
+        
+
+        loss.append(epoch_loss / len(Y))
+
+    return weights, loss
 
 # training loss and accuracy
-x_train, y_train = createDataSet(5000)
-trained = logisticRegression(x_train, y_train)
-print("Trained Weights:", trained)
+x_train, y_train = createDataSet(500)
+trained, loss = logisticRegression(x_train, y_train)
+# print("Trained Weights:", trained)
 
 X_train_bias = np.concatenate((np.ones((x_train.shape[0], 1)), x_train), axis=1)
 preds_train = sigmoid(np.dot(X_train_bias, trained))
 
 print("Training Loss: ", training_loss(y_train, preds_train))    
 print("Training Accuracy: ", predictions(y_train, preds_train), "%")
+
+epochs = range(1, len(loss) +1 )
+plt.figure(figsize = (8,5))
+plt.plot(epochs, loss, marker='o', linestyle='-')
+plt.title('Loss Over Time')
+plt.xlabel('Epochs')
+plt.ylabel('Training Loss')
+plt.grid(True)
+plt.show()
