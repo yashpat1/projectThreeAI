@@ -210,16 +210,16 @@ def createDangerousSet(numExamples):
     X = []
     Y = []
     dangerousCount = 0
-    for i in range(numExamples):
+    while dangerousCount < numExamples:
         diagram, isDangerous, wire_to_cut = createDiagram()
         if isDangerous:
+            rotatedDiagram = diagram
+            for i in range(4):
+                exampleX, exampleY = convertDiagramToExample(rotatedDiagram, isDangerous)
+                X.append(np.array(exampleX))
+                Y.append(wire_to_cut)
+                rotatedDiagram = np.rot90(rotatedDiagram)
             dangerousCount += 1
-        rotatedDiagram = diagram
-        for i in range(4):
-            exampleX, exampleY = convertDiagramToExample(rotatedDiagram, isDangerous)
-            X.append(np.array(exampleX))
-            Y.append(wire_to_cut)
-            rotatedDiagram = np.rot90(rotatedDiagram)
         
     print("Percent of dangerous diagrams " + str(dangerousCount/numExamples))
     
