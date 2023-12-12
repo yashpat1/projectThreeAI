@@ -114,6 +114,7 @@ def createDiagram():
     else: 
         return diagram, isDangerous, 0
     
+ 
 #coverts a diagram to an example 
 def convertDiagramToExample(diagram, isDangerous):
     exampleX = []
@@ -121,15 +122,15 @@ def convertDiagramToExample(diagram, isDangerous):
     for r in range(20):
         for c in range(20):
             if diagram[r][c] == 1:
-                exampleX.extend([1,0,0,0,0])
+                exampleX.extend([1,0,0,0])
             elif diagram[r][c] == 2:
-                exampleX.extend([0,1,0,0,0])
+                exampleX.extend([0,1,0,0])
             elif diagram[r][c] == 3:
-                exampleX.extend([0,0,1,0,0])
+                exampleX.extend([0,0,1,0])
             elif diagram[r][c] == 4:
-                exampleX.extend([0,0,0,1,0])
+                exampleX.extend([0,0,0,1])
             else:
-                exampleX.extend([0,0,0,0,1])
+                exampleX.extend([0,0,0,0])
     
     return exampleX, exampleY
 
@@ -144,30 +145,15 @@ def createDataSet(numExamples):
             X.append(np.array(exampleX))
             Y.append(exampleY)
             rotatedDiagram = np.rot90(rotatedDiagram)
-        #exampleX, exampleY = convertDiagramToExample(diagram, isDangerous)
-        #X.append(np.array(exampleX))
-        #Y.append(exampleY)
+    
     print("Percent of dangerous diagrams " + str(Y.count(1)/len(Y)))
     return np.array(X), np.array(Y)
 
 def sigmoid(z):
     return 1/(1 + np.exp(-z)) # z is the dot product between weights and x
 
-# def training_loss(y_train, preds_train):
-#     for i in range(len(preds_train)):
-#         if preds_train[i] == 1:
-#             preds_train[i] = 1 - 1e-8
-#         elif preds_train[i] == 0:
-#             preds_train[i] = 1e-8
-#     return np.mean(-y_train * np.log(preds_train) + (1 - y_train) * np.log(1 - preds_train))
-
-def accuracy(y_train, preds_train):
-    preds = (preds_train >= 0.5).astype(int)
-    return np.mean(preds == y_train) * 100 
-
-
-def logisticRegression(X, Y, learning_rate=0.01, lambda_val=0.00001, epochs=100):  #lr = 0.01, w = 0.000002
-    weights = np.full(X.shape[1] + 1, -0.000002) # initializes initial weights to -0.02
+def logisticRegression(X, Y, learning_rate=0.005, epochs=100):  #lr = 0.01, w = -0.000002
+    weights = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1) # initializes initial weights to numbers between -0.00002 - 0.00002
     loss = []
     X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
 
@@ -176,9 +162,8 @@ def logisticRegression(X, Y, learning_rate=0.01, lambda_val=0.00001, epochs=100)
     for epoch in range(epochs):
         rand_ind = np.random.permutation(len(Y)) # randomly choose data (prevent bias)
         epoch_loss = 0
-        
+
         for i in rand_ind:
-            #l1_reg = lambda_val * np.sum(np.abs(weights))
             x_val = X_bias[i] 
             y_val = Y[i]
 
@@ -189,25 +174,124 @@ def logisticRegression(X, Y, learning_rate=0.01, lambda_val=0.00001, epochs=100)
 
             ind_loss = -y_val * np.log(preds) - (1 - y_val) * np.log(1 - preds)
             epoch_loss += ind_loss
-        
 
         loss.append(epoch_loss / len(rand_ind))
 
     return weights, loss
 
+def accuracy(y_train, preds_train):
+    preds = (preds_train >= 0.5).astype(int)
+    return np.mean(preds == y_train) * 100 
+
 # training loss and accuracy
-x_train, y_train = createDataSet(5000)
-trained, loss = logisticRegression(x_train, y_train)
+# x_train, y_train = createDataSet(5000)
+# trained, loss = logisticRegression(x_train, y_train)
 
-X_train_bias = np.concatenate((np.ones((x_train.shape[0], 1)), x_train), axis=1)
-preds_train = sigmoid(np.dot(X_train_bias, trained))
+# X_train_bias = np.concatenate((np.ones((x_train.shape[0], 1)), x_train), axis=1)
+# preds_train = sigmoid(np.dot(X_train_bias, trained))
    
-print("Training Accuracy: ", accuracy(y_train, preds_train), "%")
+# print("Training Accuracy: ", accuracy(y_train, preds_train), "%")
 
-epochs = range(1, len(loss) +1)
+# x_test, y_test = createDataSet(500)
+# X_test_bias = np.concatenate((np.ones((x_test.shape[0], 1)), x_test), axis=1)
+# preds_test = sigmoid(np.dot(X_test_bias, trained))
+# print("Test Accuracy: ", accuracy(y_test, preds_test), "%")
+
+# epochs = range(1, len(loss) +1)
+# plt.figure(figsize = (8,5))
+# plt.plot(epochs, loss, marker='o', linestyle='-')
+# plt.title('Loss Over Time for Step 1')
+# plt.xlabel('Epochs')
+# plt.ylabel('Training Loss')
+# plt.grid(True)
+# plt.show()
+
+def createDangerousSet(numExamples):
+    X = []
+    Y = []
+    dangerousCount = 0
+    for i in range(numExamples):
+        diagram, isDangerous, wire_to_cut = createDiagram()
+        if isDangerous:
+            dangerousCount += 1
+        rotatedDiagram = diagram
+        for i in range(4):
+            exampleX, exampleY = convertDiagramToExample(rotatedDiagram, isDangerous)
+            X.append(np.array(exampleX))
+            Y.append(wire_to_cut)
+            rotatedDiagram = np.rot90(rotatedDiagram)
+        
+    print("Percent of dangerous diagrams " + str(dangerousCount/numExamples))
+    
+    return np.array(X), np.array(Y)
+
+def softmax(dot_prod):
+    # output = []
+    # sum = 0
+    # for i in range(len(weights)):
+    #     dot_product = np.exp(np.dot(weights[i], x_val))
+    #     output.append(dot_product)
+    #     sum += dot_product
+    # output /= sum
+
+    # return np.array(output)
+    exps = np.exp(dot_prod - np.max(dot_prod))
+    return exps / np.sum(exps)
+
+def softmaxRegression(X, Y, learning_rate=0.005, epochs=100):
+    classes = len(np.unique(Y))
+    samples,features = X.shape
+    wr = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    wb = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    wy = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    wg = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    weights = [wr,wb,wy,wg] # initializes initial weights to numbers between -0.00002 - 0.00002
+    loss = []
+
+    X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
+    one_hot_Y = np.eye(classes)[Y] # one-hot-vectors for each wire color
+
+    for epoch in range(epochs):
+        epoch_loss = 0
+        gradient = np.zeros_like(weights)
+
+        for i in range(samples):
+            x_val = X_bias[i] 
+            y_val = one_hot_Y[i]
+
+            probs = softmax(np.dot(weights, x_val))
+            epoch_loss += -np.sum(np.log(probs) * y_val[:probs.shape[0]])
+
+            gradient += np.outer(probs - y_val[:probs.shape[0]], x_val)
+        
+        weights -= learning_rate * gradient/samples
+        epoch_loss /= samples
+        loss.append(epoch_loss)
+
+    return weights, loss
+
+def accuracySoftmax(y, preds):
+    preds = np.argmax(preds, axis=1)
+    return np.mean(preds == y) * 100 
+
+# training loss and accuracy
+x2_train, y2_train = createDangerousSet(5000)
+trained2, loss2 = softmaxRegression(x2_train, y2_train)
+
+X2_train_bias = np.concatenate((np.ones((x2_train.shape[0], 1)), x2_train), axis=1)
+preds2_train = softmax(np.dot(X2_train_bias, trained2.T))
+
+print("Training Accuracy: ", accuracySoftmax(y2_train, preds2_train), "%")
+
+x2_test, y2_test = createDangerousSet(500)
+X2_test_bias = np.concatenate((np.ones((x2_test.shape[0], 1)), x2_test), axis=1)
+preds2_test = softmax(np.dot(X2_test_bias, trained2.T))
+print("Test Accuracy: ", accuracySoftmax(y2_test, preds2_test), "%")
+
+epochs = range(1, len(loss2) +1)
 plt.figure(figsize = (8,5))
-plt.plot(epochs, loss, marker='o', linestyle='-')
-plt.title('Loss Over Time')
+plt.plot(epochs, loss2, marker='o', linestyle='-')
+plt.title('Loss Over Time for Step 2')
 plt.xlabel('Epochs')
 plt.ylabel('Training Loss')
 plt.grid(True)
