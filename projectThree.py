@@ -511,7 +511,7 @@ def softmaxRegression(X, Y, learning_rate=0.01, alpha=0.1, epochs=2000):
  
 def accuracySoftmax(y, preds):
     preds = np.argmax(preds, axis=1) + 1
-    return np.mean(preds == y) * 100
+    return np.round(np.mean(preds == y) * 100, 2)
 
     #  m = len(y)
     # return np.round(100*(np.sum(y == y_pred) / m), 2) 
