@@ -281,7 +281,6 @@ def createDataSet(numExamples):
             Y.append(exampleY)
             rotatedDiagram = np.rot90(rotatedDiagram)
     
-    print("Percent of dangerous diagrams " + str(Y.count(1)/len(Y)))
     return np.array(X), np.array(Y)
 
 def sigmoid(z):
@@ -380,7 +379,7 @@ def convertDangerousDiagramToExample(diagram, isDangerous):
                 mappedDiagram.append([0,0,0,0])
             
 #(R,B,G,Y)
-    pairs = {(2,0,0,0): 0, (1,1,0,0):0, (1,0,1,0):0, (1,0,0,1):0, (1,0,0,0):0, (0,2,0,0):0, (0,1,1,0):0, (0,1,0,1):0, (0,1,0,0):0, (0,0,2,0):0, (0,0,1,1):0, (0,0,1,0):0, (0,0,0,2):0, (0,0,0,1):0, (0,0,0,0):0}
+    pairs = {(2,0,0,0):0, (1,1,0,0):0, (1,0,1,0):0, (1,0,0,1):0, (1,0,0,0):0, (0,2,0,0):0, (0,1,1,0):0, (0,1,0,1):0, (0,1,0,0):0, (0,0,2,0):0, (0,0,1,1):0, (0,0,1,0):0, (0,0,0,2):0, (0,0,0,1):0, (0,0,0,0):0}
     testL = []
     for r in range(0,19, 2):
          for c in range(0, 19, 2):
@@ -388,15 +387,12 @@ def convertDangerousDiagramToExample(diagram, isDangerous):
              pairs[tuple(sum(i) for i in zip(mappedDiagram[r * len(diagram) + c + 1], mappedDiagram[(r + 1) * len(diagram) + c + 1]))] += 1
              pairs[tuple(sum(i) for i in zip(mappedDiagram[(r + 1) * len(diagram) + c + 1], mappedDiagram[(r + 1) * len(diagram) + c]))] += 1
              pairs[tuple(sum(i) for i in zip(mappedDiagram[(r + 1) * len(diagram) + c], mappedDiagram[r * len(diagram) + c]))] += 1
-             #testL.append((r,c))
-    #print(len(testL))
-#sum(i) for i in zip(test_list1, test_list2)
+
     testCount = 0
     for key in pairs:
         exampleX.append(pairs[key])
         testCount += pairs[key]
-    #print("Test Count: " + str(testCount))
-    #print(len(exampleX))
+
     return exampleX, exampleY
 
 def createDangerousSet(numExamples):
@@ -413,8 +409,6 @@ def createDangerousSet(numExamples):
                 Y.append(wire_to_cut)
                 rotatedDiagram = np.rot90(rotatedDiagram)
             dangerousCount += 1
-        
-    print("Percent of dangerous diagrams " + str(dangerousCount/numExamples))
     
     return np.array(X), np.array(Y)
 
@@ -422,23 +416,12 @@ def oneHotY(y, numClasses):
     numLabels = len(y)
     y_hot = np.zeros((numLabels, numClasses))
 
-    print(numLabels)
-    print(numClasses)
     for i in range(numLabels):
         y_hot[i, y[i] - 1] = 1
 
     return y_hot
 
 def softmax(dot_prod):
-    # output = []
-    # sum = 0
-    # for i in range(len(weights)):
-    #     dot_product = np.exp(np.dot(weights[i], x_val))
-    #     output.append(dot_product)
-    #     sum += dot_product
-    # output /= sum
-
-    # return np.array(output)
     exps = np.exp(dot_prod - np.max(dot_prod, axis=0, keepdims=True))
     return exps / np.sum(exps, axis=0, keepdims=True)
 
@@ -454,28 +437,21 @@ def check_similarity(diagram):
                 sim_feature[x,y] = 0
     return sim_feature
 
-def softmaxRegression(X, Y, learning_rate=0.01, alpha=0.1, epochs=2000):
+def softmaxRegression(X, Y, learning_rate=0.01, alpha=0.1, epochs=100):
     classes = 4
-    samples,features =  X.shape
-    print("Featurs: " + str(features))
-    # wr = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
-    # wb = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
-    # wy = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
-    # wg = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
-    weights = np.random.normal(loc=0, scale=0.00002, size=(classes, features + 1))
-    # weights = np.array([wr,wb,wy,wg]) # initializes initial weights to numbers between -0.00002 - 0.00002
-    # weights = np.random.random((X.shape[1] + 1, classes))
-    #b = np.random.random(classes)
-    #b = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    samples,features = X.shape
+
+    weights = np.random.normal(loc=0, scale=0.002, size=(classes, features + 1))
+
     loss = []
 
     X_normal = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
     X_bias = np.concatenate((np.ones((samples,1)), X_normal), axis=1)
     one_hot_Y = oneHotY(Y, classes) # one-hot-vectors for each wire color
 
-    #decay_rate = 0.95
+    # decay_rate = 0.99
     for epoch in range(epochs):
-        #learning_rate *= decay_rate
+        # learning_rate *= decay_rate
         epoch_loss = 0
         gradient = np.zeros_like(weights)
 
@@ -486,38 +462,22 @@ def softmaxRegression(X, Y, learning_rate=0.01, alpha=0.1, epochs=2000):
 
             probs = softmax(np.dot(weights, x_val))
             epoch_loss += -np.sum(np.log(probs) * y_val)
-            # epoch_loss += (-np.mean(np.log(p_hat[np.arange(len(Y)) - 1, Y - 1])) + alpha * (1/2 * np.sum(np.square(weights))))
             gradient += np.outer(probs - y_val, x_val)
         
+        weights -= learning_rate * (gradient/samples + alpha * np.sign(weights))
 
-        weights -= learning_rate * (gradient/samples + 2 * alpha * weights)
 
         epoch_loss /= samples
         loss.append(epoch_loss)
 
-
     return weights, loss
-
-# def predict(X, w):
-#     X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
-#     z = X_bias.dot(w)
-#     p_hat = softmax(z)
-
-
-#     predicted_class = np.argmax(p_hat, axis=1)
-
-
-#     return predicted_class
  
 def accuracySoftmax(y, preds):
     preds = np.argmax(preds, axis=1) + 1
     return np.round(np.mean(preds == y) * 100, 2)
 
-    #  m = len(y)
-    # return np.round(100*(np.sum(y == y_pred) / m), 2) 
-
 # training loss and accuracy
-x2_train, y2_train = createDangerousSet(500)
+x2_train, y2_train = createDangerousSet(5000)
 trained2, loss2 = softmaxRegression(x2_train, y2_train)
 
 X2_train_bias = np.concatenate((np.ones((x2_train.shape[0], 1)), x2_train), axis=1)
