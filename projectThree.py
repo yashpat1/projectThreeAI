@@ -114,6 +114,140 @@ def createDiagram():
     else: 
         return diagram, isDangerous, 0
     
+def createDangerousDiagram():
+    diagram = [[0 for _ in range(20)] for _ in range(20)]
+    colors = [1, 2, 4] # 1 = Red | 2 = Blue | 4 = Green *Yellow is removed initially
+    yellowWireAdded = False
+    isDangerous = True
+    wire_to_cut = 0
+
+
+    row_first = random.random() < 0.5 # decides whether row or column is chosen first (50% chance)
+    rowSelected = []
+    columnSelected = []
+
+
+    if row_first:
+        # row
+        randColor = random.choice(colors)
+        colors.remove(randColor)
+        randRow = random.randrange(1,21)
+        rowSelected.append(randRow)
+        for i in range(20):
+            diagram[randRow - 1][i] = randColor
+
+
+        if 1 not in colors: # checks if Red wire is laid before Yellow wire to determine that image is Dangerous
+            yellowWireAdded = True
+            colors.append(3) #Yellow wire can be selected after Red wire is laid
+            isDangerous = True
+
+
+        # column
+        randColor = random.choice(colors)
+        colors.remove(randColor)
+        randColumn = random.randrange(1,21)
+        columnSelected.append(randColumn)
+        for i in range(20):
+            diagram[i][randColumn - 1] = randColor
+
+
+        if 1 not in colors and not yellowWireAdded: #make sure yellow wire has not been laid already
+            yellowWireAdded = True
+            colors.append(3)
+            isDangerous = True
+       
+        # row
+        randColor = random.choice(colors)
+        colors.remove(randColor)
+        wire_to_cut = randColor # signifies which wire to cut (3rd one laid down) if it is dangerous
+        while True:
+            randRow = random.randrange(1,21)
+            if randRow not in rowSelected:
+                break
+        for i in range(20):
+            diagram[randRow - 1][i] = randColor
+       
+        if 1 not in colors and not yellowWireAdded:
+            yellowWireAdded = True
+            colors.append(3)
+            isDangerous = True
+
+
+        # column
+        randColor = random.choice(colors)
+        colors.remove(randColor)
+        while True:
+            randColumn = random.randrange(1,21)
+            if randColumn not in columnSelected:
+                break
+        for i in range(20):
+            diagram[i][randColumn - 1] = randColor
+       
+        if 1 not in colors and yellowWireAdded:
+            isDangerous = True
+       
+    else:
+        # column
+        randColor = random.choice(colors)
+        colors.remove(randColor)
+        randColumn = random.randrange(1,21)
+        columnSelected.append(randColumn)
+        for i in range(20):
+            diagram[i][randColumn - 1] = randColor
+
+
+        if 1 not in colors:
+            yellowWireAdded = True
+            colors.append(3)
+            isDangerous = True
+        # row
+        randColor = random.choice(colors)
+        colors.remove(randColor)
+        randRow = random.randrange(1,21)
+        rowSelected.append(randRow)
+        for i in range(20):
+            diagram[randRow - 1][i] = randColor
+       
+        if 1 not in colors and not yellowWireAdded:
+            yellowWireAdded = True
+            colors.append(3)
+            isDangerous = True
+
+
+        # column
+        randColor = random.choice(colors)
+        colors.remove(randColor)
+        wire_to_cut = randColor # signifies which wire to cut (3rd one laid down) if it is dangerous
+        while True:
+            randColumn = random.randrange(1,21)
+            if randColumn not in columnSelected:
+                break
+        for i in range(20):
+            diagram[i][randColumn - 1] = randColor
+       
+        if 1 not in colors and not yellowWireAdded:
+            yellowWireAdded = True
+            colors.append(3)
+
+        # row
+        randColor = random.choice(colors)
+        colors.remove(randColor)
+        while True:
+            randRow = random.randrange(1,21)
+            if randRow not in rowSelected:
+                break
+        for i in range(20):
+            diagram[randRow - 1][i] = randColor
+       
+        if 1 not in colors and yellowWireAdded:
+            isDangerous = True
+   
+    if isDangerous:
+        return diagram, isDangerous, wire_to_cut
+    else:
+        return diagram, isDangerous, 0
+    
  
 #coverts a diagram to an example 
 def convertDiagramToExample(diagram, isDangerous):
@@ -139,10 +273,6 @@ def createDataSet(numExamples):
     Y = []
     for i in range(numExamples):
         diagram, isDangerous, wire_to_cut = createDiagram()
-        exampleX, exampleY = convertDiagramToExample(diagram, isDangerous)
-        X.append(np.array(exampleX))
-        Y.append(np.array(exampleY))
-    
         rotatedDiagram = diagram
         for i in range(4):
             exampleX, exampleY = convertDiagramToExample(rotatedDiagram, isDangerous)
@@ -175,10 +305,10 @@ def logisticRegression(X, Y, learning_rate=0.005, epochs=100):  #lr = 0.01, w = 
             preds = sigmoid(np.dot(weights, x_val))
             preds = np.clip(preds, epsilon, 1-epsilon)
             error = preds - y_val # error is prediction - actual value
-            weights -= learning_rate * ((x_val * error) + l2_reg_weight)
+            weights -= learning_rate * (x_val * error)
             weights -= learning_rate * (x_val * error)
 
-            ind_loss = -y_val * np.log(preds) - (1 - y_val) * np.log(1 - preds) + l2_reg_loss
+            ind_loss = -y_val * np.log(preds) - (1 - y_val) * np.log(1 - preds)
             epoch_loss += ind_loss
 
         loss.append(epoch_loss / len(rand_ind))
@@ -216,8 +346,8 @@ def createDangerousSet(numExamples):
     X = []
     Y = []
     dangerousCount = 0
-    while dangerousCount < numExamples:
-        diagram, isDangerous, wire_to_cut = createDiagram()
+    for i in range(numExamples):
+        diagram, isDangerous, wire_to_cut = createDangerousDiagram()
         if isDangerous:
             rotatedDiagram = diagram
             for i in range(4):
@@ -231,6 +361,16 @@ def createDangerousSet(numExamples):
     
     return np.array(X), np.array(Y)
 
+def oneHotY(y, numClasses):
+    numLabels = len(y)
+    y_hot = np.zeros((numLabels, numClasses))
+
+
+    for i in range(numLabels):
+        y_hot[i, y[i] - 1] = 1
+
+    return y_hot
+
 def softmax(dot_prod):
     # output = []
     # sum = 0
@@ -241,47 +381,84 @@ def softmax(dot_prod):
     # output /= sum
 
     # return np.array(output)
-    exps = np.exp(dot_prod - np.max(dot_prod))
-    return exps / np.sum(exps)
+    exps = np.exp(dot_prod - np.max(dot_prod, axis=0, keepdims=True))
+    return exps / np.sum(exps, axis=0, keepdims=True)
 
-def softmaxRegression(X, Y, learning_rate=0.005, epochs=100):
+def check_similarity(diagram):
+    height, width = diagram.shape
+    sim_feature = np.zeros((height-1, width-1))
+
+    for x in range(1, height-1):
+        for y in range(1, width-1):
+            if diagram[x,y] == diagram[x, y+1] == diagram[x+1, y+1]:
+                sim_feature[x,y] = 1
+            else:
+                sim_feature[x,y] = 0
+    return sim_feature
+
+def softmaxRegression(X, Y, learning_rate=0.00001, alpha=0.1, epochs=500):
     classes = len(np.unique(Y))
-    samples,features = X.shape
-    wr = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
-    wb = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
-    wy = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
-    wg = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
-    weights = [wr,wb,wy,wg] # initializes initial weights to numbers between -0.00002 - 0.00002
+    samples,features =  X.shape
+    # wr = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    # wb = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    # wy = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    # wg = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
+    weights = np.random.normal(loc=0, scale=0.00002, size=(classes, features + 1))
+    # weights = np.array([wr,wb,wy,wg]) # initializes initial weights to numbers between -0.00002 - 0.00002
+    # weights = np.random.random((X.shape[1] + 1, classes))
+    #b = np.random.random(classes)
+    #b = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1)
     loss = []
 
-    X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
-    one_hot_Y = np.eye(classes)[Y] # one-hot-vectors for each wire color
+    X_normal = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
+    X_bias = np.concatenate((np.ones((samples,1)), X_normal), axis=1)
+    one_hot_Y = oneHotY(Y, classes) # one-hot-vectors for each wire color
 
+    decay_rate = 0.95
     for epoch in range(epochs):
+        learning_rate *= decay_rate
         epoch_loss = 0
         gradient = np.zeros_like(weights)
 
         for i in range(samples):
-            x_val = X_bias[i] 
+            x_val = X_bias[i]
             y_val = one_hot_Y[i]
 
-            probs = softmax(np.dot(weights, x_val))
-            epoch_loss += -np.sum(np.log(probs) * y_val[:probs.shape[0]])
 
-            gradient += np.outer(probs - y_val[:probs.shape[0]], x_val)
+            probs = softmax(np.dot(weights, x_val))
+            epoch_loss += -np.sum(np.log(probs) * y_val)
+            # epoch_loss += (-np.mean(np.log(p_hat[np.arange(len(Y)) - 1, Y - 1])) + alpha * (1/2 * np.sum(np.square(weights))))
+            gradient += np.outer(probs - y_val, x_val)
         
-        weights -= learning_rate * gradient/samples
+
+        weights -= learning_rate * (gradient/samples + 2 * alpha * weights)
+
         epoch_loss /= samples
         loss.append(epoch_loss)
 
+
     return weights, loss
 
+# def predict(X, w):
+#     X_bias = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
+#     z = X_bias.dot(w)
+#     p_hat = softmax(z)
+
+
+#     predicted_class = np.argmax(p_hat, axis=1)
+
+
+#     return predicted_class
+
 def accuracySoftmax(y, preds):
-    preds = np.argmax(preds, axis=1)
-    return np.mean(preds == y) * 100 
+    preds = np.argmax(preds, axis=1) + 1
+    return np.mean(preds == y) * 100
+
+    #  m = len(y)
+    # return np.round(100*(np.sum(y == y_pred) / m), 2) 
 
 # training loss and accuracy
-x2_train, y2_train = createDangerousSet(5000)
+x2_train, y2_train = createDangerousSet(500)
 trained2, loss2 = softmaxRegression(x2_train, y2_train)
 
 X2_train_bias = np.concatenate((np.ones((x2_train.shape[0], 1)), x2_train), axis=1)
