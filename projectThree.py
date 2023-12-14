@@ -142,6 +142,16 @@ def createDataSet(numExamples):
         X.append(np.array(exampleX))
         Y.append(np.array(exampleY))
     
+        rotatedDiagram = diagram
+        for i in range(4):
+            exampleX, exampleY = convertDiagramToExample(rotatedDiagram, isDangerous)
+            X.append(np.array(exampleX))
+            Y.append(exampleY)
+            rotatedDiagram = np.rot90(rotatedDiagram)
+        #exampleX, exampleY = convertDiagramToExample(diagram, isDangerous)
+        #X.append(np.array(exampleX))
+        #Y.append(exampleY)
+    print("Percent of dangerous diagrams " + str(Y.count(1)/len(Y)))
     return np.array(X), np.array(Y)
 
 def sigmoid(z):
@@ -156,8 +166,15 @@ def sigmoid(z):
 #             preds_train[i] = 1e-8
 #     return np.mean(-y_train * np.log(preds_train) + (1 - y_train) * np.log(1 - preds_train))
 
-def logisticRegression(X, Y, learning_rate=0.0000u01, lambda_val=0.000001, epochs=100):
+def logisticRegression(X, Y, learning_rate=0.000001, lambda_val=0.000001, epochs=100):
     weights = np.random.normal(loc=0, scale=0.002, size=X.shape[1] + 1) # initializes initial weights
+def accuracy(y_train, preds_train):
+    preds = (preds_train >= 0.5).astype(int)
+    return np.mean(preds == y_train) * 100 
+
+
+def logisticRegression(X, Y, learning_rate=0.01, lambda_val=0.00001, epochs=100):  #lr = 0.01, w = 0.000002
+    weights = np.full(X.shape[1] + 1, -0.000002) # initializes initial weights to -0.02
     loss = []
     X_bias = np.concatenate([np.ones((X.shape[0], 1)), X], 1) # added a bias feature 
 
@@ -170,6 +187,7 @@ def logisticRegression(X, Y, learning_rate=0.0000u01, lambda_val=0.000001, epoch
         for i in rand_ind:
             l2_reg_weight = 2 * lambda_val * np.sum(weights[1:])
             l2_reg_loss = lambda_val * np.sum(weights[1:] ** 2)
+            #l1_reg = lambda_val * np.sum(np.abs(weights))
             x_val = X_bias[i] 
             y_val = Y[i]
 
@@ -177,6 +195,7 @@ def logisticRegression(X, Y, learning_rate=0.0000u01, lambda_val=0.000001, epoch
             preds = np.clip(preds, epsilon, 1-epsilon)
             error = preds - y_val # error is prediction - actual value
             weights -= learning_rate * ((x_val * error) + l2_reg_weight)
+            weights -= learning_rate * (x_val * error)
 
             ind_loss = -y_val * np.log(preds) - (1 - y_val) * np.log(1 - preds) + l2_reg_loss
             epoch_loss += ind_loss
