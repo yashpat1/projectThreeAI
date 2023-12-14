@@ -287,7 +287,7 @@ def sigmoid(z):
      # to help prevent overflow (took out the max)
     return 1/(1 + np.exp(-z)) # z is the dot product between weights and x
 
-def logisticRegression(X, Y, learning_rate=0.005, epochs=100):  #lr = 0.01, w = -0.000002
+def logisticRegression(X, Y, learning_rate=0.005, epochs=1000):  #lr = 0.01, w = -0.000002
     weights = np.random.normal(loc=0, scale=0.00002, size=X.shape[1] + 1) # initializes initial weights to numbers between -0.00002 - 0.00002
     loss = []
     X_bias = np.concatenate([np.ones((X.shape[0], 1)), X], 1) # added a bias feature 
@@ -320,29 +320,28 @@ def accuracy(y_train, preds_train):
     return np.mean(preds == y_train) * 100 
 
 # training loss and accuracy
-# x_train, y_train = createDataSet(5000)
-# trained, loss = logisticRegression(x_train, y_train)
+x_train, y_train = createDataSet(5000)
+trained, loss = logisticRegression(x_train, y_train)
 
-# X_train_bias = np.concatenate((np.ones((x_train.shape[0], 1)), x_train), axis=1)
-# preds_train = sigmoid(np.dot(X_train_bias, trained))
+X_train_bias = np.concatenate((np.ones((x_train.shape[0], 1)), x_train), axis=1)
+preds_train = sigmoid(np.dot(X_train_bias, trained))
    
-# print("Training Accuracy: ", accuracy(y_train, preds_train), "%")
+print("Training Accuracy 1: ", accuracy(y_train, preds_train), "%")
 
-# x_test, y_test = createDataSet(500)
-# X_test_bias = np.concatenate((np.ones((x_test.shape[0], 1)), x_test), axis=1)
-# preds_test = sigmoid(np.dot(X_test_bias, trained))
-# print("Test Accuracy: ", accuracy(y_test, preds_test), "%")
+x_test, y_test = createDataSet(500)
+X_test_bias = np.concatenate((np.ones((x_test.shape[0], 1)), x_test), axis=1)
+preds_test = sigmoid(np.dot(X_test_bias, trained))
+print("Test Accuracy 1: ", accuracy(y_test, preds_test), "%")
 
-# epochs = range(1, len(loss) +1)
-# plt.figure(figsize = (8,5))
-# plt.plot(epochs, loss, marker='o', linestyle='-')
-# plt.title('Loss Over Time for Step 1')
-# plt.xlabel('Epochs')
-# plt.ylabel('Training Loss')
-# plt.grid(True)
-# plt.show()
-def isValid(r,c, diagram):
-    return r >= 0 and r < len(diagram) and c >= 0 and c < len(diagram[0])
+epochs = range(1, len(loss) +1)
+plt.figure(figsize = (8,5))
+plt.plot(epochs, loss, marker='o', linestyle='-')
+plt.title('Loss Over Time for Step 1')
+plt.xlabel('Epochs')
+plt.ylabel('Training Loss')
+plt.grid(True)
+plt.show()
+
 
 def convertDangerousDiagramToExample(diagram, isDangerous):
     exampleX = []
@@ -437,7 +436,7 @@ def check_similarity(diagram):
                 sim_feature[x,y] = 0
     return sim_feature
 
-def softmaxRegression(X, Y, learning_rate=0.01, alpha=0.1, epochs=100):
+def softmaxRegression(X, Y, learning_rate=0.01, beta=0.01, epochs=1000):
     classes = 4
     samples,features = X.shape
 
@@ -449,9 +448,9 @@ def softmaxRegression(X, Y, learning_rate=0.01, alpha=0.1, epochs=100):
     X_bias = np.concatenate((np.ones((samples,1)), X_normal), axis=1)
     one_hot_Y = oneHotY(Y, classes) # one-hot-vectors for each wire color
 
-    # decay_rate = 0.99
+    decay_rate = 0.97
     for epoch in range(epochs):
-        # learning_rate *= decay_rate
+        learning_rate *= decay_rate
         epoch_loss = 0
         gradient = np.zeros_like(weights)
 
@@ -464,7 +463,7 @@ def softmaxRegression(X, Y, learning_rate=0.01, alpha=0.1, epochs=100):
             epoch_loss += -np.sum(np.log(probs) * y_val)
             gradient += np.outer(probs - y_val, x_val)
         
-        weights -= learning_rate * (gradient/samples + alpha * np.sign(weights))
+        weights -= learning_rate * (gradient/samples + beta * np.sign(weights))
 
 
         epoch_loss /= samples
@@ -483,12 +482,12 @@ trained2, loss2 = softmaxRegression(x2_train, y2_train)
 X2_train_bias = np.concatenate((np.ones((x2_train.shape[0], 1)), x2_train), axis=1)
 preds2_train = softmax(np.dot(X2_train_bias, trained2.T))
 
-print("Training Accuracy: ", accuracySoftmax(y2_train, preds2_train), "%")
+print("Training Accuracy 2: ", accuracySoftmax(y2_train, preds2_train), "%")
 
 x2_test, y2_test = createDangerousSet(500)
 X2_test_bias = np.concatenate((np.ones((x2_test.shape[0], 1)), x2_test), axis=1)
 preds2_test = softmax(np.dot(X2_test_bias, trained2.T))
-print("Test Accuracy: ", accuracySoftmax(y2_test, preds2_test), "%")
+print("Test Accuracy 2: ", accuracySoftmax(y2_test, preds2_test), "%")
 
 epochs = range(1, len(loss2) +1)
 plt.figure(figsize = (8,5))
